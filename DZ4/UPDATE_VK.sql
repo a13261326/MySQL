@@ -21,8 +21,8 @@ SELECT *FROM cities LIMIT 100 ;
 SELECT *FROM countries;
 UPDATE cities SET country_id = FLOOR(1+ RAND()*300);
 
-CREATE TEMPORARY TABLE countries_temp (name VARCHAR(120) COMMENT '������� ����� "countries" ����������,
-������ ���� ����������� � �� ��������� ������� ���������������'
+CREATE TEMPORARY TABLE countries_temp (name VARCHAR(120) COMMENT '������� ����� "countries" ����������,
+������ ���� ����������� � �� ��������� ������� ���������������'
 
 SELECT *FROM countries_temp;
 INSERT INTO countries_temp(name) SELECT name FROM countries;
@@ -52,7 +52,7 @@ INSERT INTO ext(name) VALUES
 
 UPDATE media  SET filename = CONCAT(
  ("https://dropbox.com/media/vk/"),(SELECT name FROM cities ORDER BY RAND() LIMIT 1),(SELECT name FROM ext ORDER BY RAND() LIMIT 1));
-'�������� ������� filename. ��� ��������� ��������� ��������� ���� ���� �� ����. � �������� ����������� ���� �������� �������� �������'
+'�������� ������� filename. ��� ��������� ��������� ��������� ���� ���� �� ����. � �������� ����������� ���� �������� �������� �������'
 
 
 UPDATE media  SET metadata = CONCAT('{"owner":"',(SELECT CONCAT(first_name," ", last_name)  FROM users WHERE users.id = media.user_id),'"}');
@@ -88,3 +88,280 @@ UPDATE put_likes SET media_id  = FLOOR(1+ RAND()*100);
 UPDATE put_likes SET messag_id  = FLOOR(1+ RAND()*100);
 UPDATE put_likes SET social_posts_id  = FLOOR(1+ RAND()*100);
 UPDATE social_posts SET user_id  = FLOOR(1+ RAND()*100);
+
+
+
+
+ Таблица лайков
+DROP TABLE IF EXISTS likes;
+CREATE TABLE likes (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  user_id INT UNSIGNED NOT NULL,
+  target_id INT UNSIGNED NOT NULL,
+  target_type ENUM('messages', 'users', 'posts', 'media') NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Временная таблица типов лайков
+DROP TABLE IF EXISTS target_types;
+CREATE TEMPORARY TABLE target_types (
+  name VARCHAR(100) NOT NULL UNIQUE
+);
+
+INSERT INTO target_types (name) VALUES 
+  ('messages'),
+  ('users'),
+  ('media'),
+  ('posts');
+
+-- Заполняем лайки
+INSERT INTO likes 
+  SELECT 
+    id, 
+    FLOOR(1 + (RAND() * 100)), 
+    FLOOR(1 + (RAND() * 100)),
+    (SELECT name FROM target_types ORDER BY RAND() LIMIT 1),
+    CURRENT_TIMESTAMP 
+  FROM messages;
+-- Создадим таблицу постов
+DROP TABLE IF EXISTS posts;
+CREATE TABLE posts (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  user_id INT UNSIGNED NOT NULL,
+  community_id INT UNSIGNED,
+  head VARCHAR(255),
+  body TEXT NOT NULL,
+  media_id INT UNSIGNED,
+  is_public BOOLEAN DEFAULT TRUE,
+  is_archived BOOLEAN DEFAULT FALSE,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+-- Заполняем таблицу постов
+INSERT INTO posts (user_id,community_id,head,body,media_id,is_public,is_archived,created_at,updated_at)
+values(
+  (SELECT id FROM users ORDER BY RAND() LIMIT 1),
+  (SELECT id FROM communities ORDER BY RAND() LIMIT 1),
+  (SUBSTRING(MD5(RAND()) FROM 1 FOR 7)),
+  (SUBSTRING(MD5(RAND()) FROM 1 FOR 15)),
+  (SELECT id FROM media ORDER BY RAND() LIMIT 1),
+  (SELECT  if((0 + (RAND() * 1)) > 0.5, 1,0)),
+  (SELECT  if((0 + (RAND() * 1)) > 0.5, 1,0)),
+  (SELECT created_at FROM messages ORDER BY RAND() LIMIT 1),
+  (SELECT created_at FROM friendship ORDER BY RAND() LIMIT 1));
+
+-- Добавляем внешние ключ
+ALTER TABLE profiles
+  ADD CONSTRAINT profiles_user_id_fk 
+    FOREIGN KEY (user_id) REFERENCES users(id)
+      ON DELETE CASCADE;
+
+     ALTER TABLE messages
+  ADD CONSTRAINT messages_from_user_id_fk 
+    FOREIGN KEY (from_user_id) REFERENCES users(id),
+  ADD CONSTRAINT messages_to_user_id_fk 
+    FOREIGN KEY (to_user_id) REFERENCES users(id);
+  
+   ALTER TABLE messages
+  ADD CONSTRAINT messages_from_user_id_fk 
+    FOREIGN KEY (from_user_id) REFERENCES users(id),
+  ADD CONSTRAINT messages_to_user_id_fk 
+    FOREIGN KEY (to_user_id) REFERENCES users(id);
+
+
+select *from target_types
+
+
+-- --------------------------------------------------------
+
+-- Найти сколько лайков получили медиафайлы пользователя с id = 7
+SELECT COUNT(*)
+  FROM likes
+    WHERE target_type = 'media'
+      AND target_id IN (SELECT id FROM media WHERE user_id = 7);    
+    
+-- Поиск пользователя по шаблонам имени  
+SELECT CONCAT(first_name, ' ', last_name) AS fullname  
+  FROM users
+    WHERE first_name LIKE 'M%';
+  
+-- Используем регулярные выражения
+SELECT CONCAT(first_name, ' ', last_name) AS fullname  
+  FROM users
+    WHERE last_name RLIKE '^S.*r$'
+
+
+
+ -- ----------------- -- 3. Определить кто больше поставил лайков (всего) - мужчины или женщины 
+SELECT COUNT(*) as total,
+(SELECT
+  (SELECT  gender FROM  profiles WHERE user_id =likes.user_id )) as gender
+    FROM likes  GROUP BY gender ; 
+ -- ---------------------------------------------------------------------------------------------
+SELECT first_name ,
+ (select (COUNT(*) FROM messages GROUP BY from_user_id) WHERE from_user_id = id.users ) FROM users;
+select (COUNT(*) FROM messages GROUP BY from_user_id WHERE from_user_id = id.users ;
+'posts''media''likes'   
+ -- база
+ SELECT * FROM users WHERE id = 7;
+ (SELECT city_id FROM profiles WHERE user_id = 7);
+
+select from_user_id=7, COUNT(*) from messages GROUP BY from_user_id ; 
+select 
+(select user_id,COUNT(*) from posts GROUP BY user_id);
+select user_id,COUNT(*) from media GROUP BY user_id where user_id=(SELECT first_name from users where id=media.user_id ) ;
+select user_id,COUNT(*) from likes GROUP BY user_id;
+select*from posts;
+
+
+select(
+(COUNT(*) from messages GROUP BY from_user_id) from messages,
+(SELECT id from users WHERE  id=from_user_id )) ; 
+
+
+SELECT
+  id, first_name,(SELECT COUNT(*) from messages GROUP BY from_user_id in(SELECT from_user_id FROM  messages) ) as 'сообщения'
+FROM
+  users
+
+
+ SELECT
+  id, name, catalog_id
+FROM
+  products
+WHERE
+  catalog_id = (SELECT id FROM catalogs WHERE name = "Процессоры");
+
+
+
+
+
+
+
+
+
+
+
+
+friendship_status_id = (
+      SELECT id FROM friendship_statuses WHERE name = 'Confirmed'
+
+SELECT user_id,COUNT(*)
+  FROM likes
+    WHERE target_type = 'media'
+      AND target_id IN (SELECT id FROM media WHERE user_id=6);
+      
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+-- Добавляем внешние ключи в БД vk
+
+-- Смотрим структуру таблицы
+DESC users ;
+
+-- Добавляем внешние ключи profiles
+ALTER TABLE profiles
+  ADD CONSTRAINT profiles_user_id_fk 
+    FOREIGN KEY (user_id) REFERENCES users(id),
+     ADD CONSTRAINT profiles_city_id_fk 
+    FOREIGN KEY (city_id) REFERENCES cities(id);
+   
+   
+   
+   ALTER TABLE profiles DROP FOREIGN KEY profiles_user_id_fk ;
+  ALTER TABLE messages DROP FOREIGN KEY profiles_city_id_fk;
+      
+     
+     -- Изменяем тип столбца при необходимости
+ALTER TABLE profiles DROP FOREIGN KEY profiles_user_id_fk;
+ALTER TABLE profiles MODIFY COLUMN photo_id INT(10) UNSIGNED;
+      
+-- Для таблицы сообщений
+-- Смотрим структурв таблицы
+DESC messages;
+
+-- Добавляем внешние ключи messages
+ALTER TABLE messages
+  ADD CONSTRAINT messages_from_user_id_fk 
+    FOREIGN KEY (from_user_id) REFERENCES users(id),
+  ADD CONSTRAINT messages_to_user_id_fk 
+    FOREIGN KEY (to_user_id) REFERENCES users(id);
+     
+ -- Добавляем внешние ключи friendship
+DESC friendship;
+   ALTER TABLE friendship 
+  ADD CONSTRAINT friendship_from_user_id_fk 
+    FOREIGN KEY (user_id) REFERENCES users(id),
+  ADD CONSTRAINT friendship_to_user_id_fk 
+    FOREIGN KEY (friend_id) REFERENCES users(id),    
+    ADD CONSTRAINT friendship_statuses_friendship_fk 
+    FOREIGN KEY (friendship_status_id) REFERENCES friendship_statuses(id) ;
+
+   ALTER TABLE friendship DROP FOREIGN KEY friendship_statuses_friendship_fk  ;
+   
+  
+     
+     -- Добавляем внешние ключи media
+DESC media;
+   ALTER TABLE media 
+  ADD CONSTRAINT media_user_id_fk 
+    FOREIGN KEY (user_id) REFERENCES users(id),
+  ADD CONSTRAINT media_type_id_fk 
+    FOREIGN KEY (media_type_id) REFERENCES media_types(id);
+
+   ALTER TABLE friendship DROP FOREIGN KEY friendship_statuses_friendship_fk  ;
+   
+           
+
+
+   ALTER TABLE friendship DROP FOREIGN KEY friendship_statuses_friendship_fk  ;
+     -- Добавляем внешние ключи communities
+  DESC communities_users ;
+   ALTER TABLE communities_users 
+  ADD CONSTRAINT communities_user_id_fk 
+    FOREIGN KEY (user_id) REFERENCES users(id),
+ADD CONSTRAINT communities_id_fk 
+    FOREIGN KEY (community_id) REFERENCES communities(id);
+  
+       
+   ALTER TABLE friendship DROP FOREIGN KEY friendship_statuses_friendship_fk  ;
+  
+  
+   -- Добавляем внешние ключи posts
+DESC communities_users ;
+   ALTER TABLE posts 
+  ADD CONSTRAINT posts_user_id_fk 
+    FOREIGN KEY (user_id) REFERENCES users(id),
+  ADD CONSTRAINT posts_community_id_fk 
+    FOREIGN KEY (community_id) REFERENCES communities_users(community_id),    
+    ADD CONSTRAINT posts_media_id_fk 
+    FOREIGN KEY (media_id) REFERENCES media(id) ;
+
+   ALTER TABLE friendship DROP FOREIGN KEY friendship_statuses_friendship_fk  ;
+  
+   -- Добавляем внешние ключи likes
+select *from countries c ;
+   ALTER table cities 
+  ADD CONSTRAINT cities_id__fk 
+    FOREIGN KEY (country_id) REFERENCES countries(id);
+    
+  
+   
+   
+   
+   
+   
+   
+  
