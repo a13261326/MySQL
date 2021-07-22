@@ -115,14 +115,27 @@ SELECT COUNT(*) as total,
  -- -----------------------------------------------------------------
     -- 4. Вывести для каждого пользователя количество созданных сообщений, постов,
 -- загруженных медиафайлов и поставленных лайков
-   SELECT CONCAT(first_name, ' ', last_name) FROM users
-select from_user_id, COUNT(*) from messages GROUP BY from_user_id;
-select user_id, COUNT(*) from likes l GROUP BY user_id;
-select user_id, COUNT(*) from posts l GROUP BY user_id;
-select user_id, COUNT(*) from media m l GROUP BY user_id;
-   
-   
-  НЕ СМОГ СВЯЗАТЬ В ОДИН ЗАПРОС ИМЯ ПОЛЬЗОВАТЕЛЯ И АГРЕГАЦИОННЫЕ ДАННЫЕ
-   
-   
- 
+
+SELECT  first_name,last_name,
+  (SELECT count(*) 
+         FROM messages WHERE from_user_id =users.id) AS messages,
+  (SELECT count(*) 
+         FROM likes WHERE user_id =users.id ) AS likes,
+  (SELECT count(*) 
+         FROM media WHERE user_id =users.id ) AS media,
+   (SELECT count(*) 
+         FROM posts WHERE user_id =users.id ) AS posts  FROM users;
+        
+         -- 5. (по желанию) Подсчитать количество лайков которые получили
+-- 10 самых последних сообщений.    
+      SELECT count(*) AS last_ten_messages_likes FROM likes
+ WHERE target_type ='messages' AND created_at >=
+ (SELECT  created_at FROM  -- дата первого сообщения из последних десяти
+  (SELECT * FROM messages ORDER BY created_at DESC LIMIT 10) 
+    AS min_date 
+     ORDER BY created_at ASC LIMIT 1);  
+     
+
+    
+    
+    

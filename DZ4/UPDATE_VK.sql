@@ -360,8 +360,84 @@ select *from countries c ;
   
    
    
-   
-   
-   
-   
   
+   select first_name 
+       FROM users WHERE id = posts.user_id ,select (count(user_id) as posts 
+         FROM posts GROUP BY user_id );    
+ union all;
+       
+ select (select first_name from users, count(user_id) as likes 
+         FROM likes GROUP BY user_id) ; 
+        
+            
+         select first_name,( select  count(user_id) as likes 
+         FROM likes GROUP BY user_id) from users where id in likes.user_id ;  
+  union all;
+  select first_name,( select  count(user_id) as posts 
+         FROM likes GROUP BY user_id) from users) ;  
+   
+        
+   select last_name, first_name ,(SELECT count(user_id) as posts 
+         FROM likes GROUP BY user_id where user_id in users.id) from users;     
+        
+        
+        -- Найти сколько лайков получили сообщения пользователя с id = 7
+SELECT  first_name,last_name,
+  (SELECT count(*) 
+         FROM messages WHERE from_user_id =users.id  GROUP BY  from_user_id) AS messages,
+  (SELECT count(*) 
+         FROM likes WHERE user_id =users.id  GROUP BY  user_id) AS likes,
+  (SELECT count(*) 
+         FROM media WHERE user_id =users.id  GROUP BY  user_id) AS media,
+   (SELECT count(*) 
+         FROM posts WHERE user_id =users.id  GROUP BY  user_id) AS posts  FROM users;
+         
+        
+        
+           select*from messages m ;
+        
+        
+        
+        
+     select count(from_user_id) as ten 
+         FROM messages m group by  user_id;
+     
+      SELECT CONCAT(
+   (SELECT CONCAT(first_name, ' ', last_name) 
+       FROM users WHERE id = posts.user_id )) as user,count(user_id) as posts 
+         FROM posts GROUP BY user_id ;
+     
+     
+     
+       -- 5. (по желанию) Подсчитать количество лайков которые получили
+-- 10 самых последних сообщений.  
+        
+  -- 5. (по желанию) Подсчитать количество лайков которые получили
+-- 10 самых последних сообщений.    
+        
+        select*from likes l ;
+       
+       
+     select * from messages m ; 
+       
+        select count(from_user_id)  as ten 
+         FROM messages group by  from_user_id;
+       select * FROM messages order by created_at desc limit 10;
+    select  min(created_at) from (select * FROM messages order by created_at desc limit 10) as min_date from messages m ;
+  select created_at ,target_id ,target_type FROM likes where target_type='messages'   ;
+   -- --------------------------------------------------------------
+  select  created_at from 
+ (select * FROM messages order by created_at desc limit 11) 
+ as min_date 
+ order by created_at asc limit 1;
+  -- ------------------------------------------------------------------
+
+
+SELECT count(*) AS last_ten_messages_likes FROM likes
+ WHERE target_type ='messages' AND created_at >=
+ (SELECT  created_at FROM  -- дата первого сообщения из последних десяти
+  (SELECT * FROM messages ORDER BY created_at DESC LIMIT 10) 
+    AS min_date 
+     ORDER BY created_at ASC LIMIT 1);
+ 
+ 
