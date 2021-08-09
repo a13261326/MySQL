@@ -359,7 +359,10 @@ select *from countries c ;
     
   
    
-   
+   show tables;
+  select *from likes ;
+  
+  
   
    select first_name 
        FROM users WHERE id = posts.user_id ,select (count(user_id) as posts 
@@ -394,9 +397,9 @@ SELECT  first_name,last_name,
          
         
         
-           select*from messages m ;
+           select*from media m ;
         
-        
+
         
         
      select count(from_user_id) as ten 
@@ -440,4 +443,5 @@ SELECT count(*) AS last_ten_messages_likes FROM likes
     AS min_date 
      ORDER BY created_at ASC LIMIT 1);
  
- 
+ show tables;
+ select *from profiles ;
